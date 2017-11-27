@@ -89,7 +89,7 @@ public class SmartGraphTest {
             Set<String> sources = graph.getIncomingNodes(edge.getSourceNode(), LIKES);
             String s = edge.getSourceNode();
             String t = edge.getTargetNode();
-            Set<String> last = graph.getOutgoingNodes(edge.getTargetNode(), LIKES);
+            Set<String> targets = graph.getOutgoingNodes(edge.getTargetNode(), LIKES);
 
             // Everyone who likes you, loves who you like
             for (String node : sources) {
@@ -97,13 +97,13 @@ public class SmartGraphTest {
             }
 
             // You like everyone the one you like likes
-            for (String node : last) {
+            for (String node : targets) {
                 graph.addEdge(s, node, LIKES);
             }
 
             // Everyone who likes you, likes everyone the one you like likes
             for (String nodeS : sources) {
-                for (String nodeT : last) {
+                for (String nodeT : targets) {
                     graph.addEdge(nodeS, nodeT, LIKES);
                 }
             }
