@@ -1,21 +1,16 @@
-import com.harunuyar.smartgraph.Edge;
-import com.harunuyar.smartgraph.Graph;
-import com.harunuyar.smartgraph.SmartGraph;
-import com.harunuyar.smartgraph.SmartListener;
-
-import java.util.Set;
+import com.thesis.smartgraph.*;
 
 public class SmartGraphTest {
 
-    private static final String LIKES = "likes";
-
     public static void main(String[] args) {
-        SmartGraph<String, String> graph = new SmartGraph<>();
+        SmartGraph<String> graph = new SmartGraph<>();
+
+        EdgeType<String, String> LIKES = graph.createEdgeType("likes");
 
         graph.addSmartListener(new Informer());
-        graph.addSmartListener(new ReflexiveLikes());
-        graph.addSmartListener(new SymmetricLikes());
-        graph.addSmartListener(new TransitiveLikes());
+        graph.addSmartListener(SmartListener.REFLEXIVE(LIKES));
+        graph.addSmartListener(SmartListener.SYMMETRIC(LIKES));
+        graph.addSmartListener(SmartListener.TRANSITIVE(LIKES));
 
         graph.addNode("Ali");
         graph.addNode("Ayşe");
@@ -26,88 +21,35 @@ public class SmartGraphTest {
         System.out.println("\nNodes are added.\n");
         System.out.println(graph);
 
-        graph.addEdge("Ali", "Ayşe", LIKES);
-        graph.addEdge("Ayşe", "Hakan", LIKES);
-        graph.addEdge("Fatma", "Melih", LIKES);
-        graph.addEdge("Hakan", "Fatma", LIKES);
+        System.out.println();
+
+        graph.createEdge(LIKES, "Ali", "Ayşe");
+        graph.createEdge(LIKES, "Ayşe", "Hakan");
+        graph.createEdge(LIKES, "Fatma", "Melih");
+        graph.createEdge(LIKES, "Hakan", "Fatma");
 
         System.out.println("Edges are added.\n");
         System.out.println(graph);
 
+        System.out.println();
+
         System.out.println("\nEdges comes out of Ali:\n");
-        graph.getOutgoingEdges("Ali").forEach(System.out::println);
+        graph.getAllOutgoingEdges("Ali").forEach(System.out::println);
 
         System.out.println("\nEdges comes in to Melih:\n");
-        graph.getIncomingEdges("Melih").forEach(System.out::println);
+        graph.getAllIncomingEdges("Melih").forEach(System.out::println);
     }
 
-    public static class Informer implements SmartListener<String, String> {
+    public static class Informer extends SmartListener<String> {
         @Override
-        public void nodeAdded(Graph<String, String> graph, String node) {
+        public void nodeAdded(Graph<String> graph, String node) {
             System.out.println("Node added: " + node);
         }
 
         @Override
-        public void edgeAdded(Graph<String, String> graph, Edge<String, String> edge) {
-            System.out.println("Edge added: " + edge);
+        public void edgeAdded(Graph<String> graph, Edge<String, String> edgeType) {
+            System.out.println("EdgeType added: " + edgeType);
         }
     }
 
-    public static class ReflexiveLikes implements SmartListener<String, String> {
-        @Override
-        public void nodeAdded(Graph<String, String> graph, String node) {
-            // Everybody likes himself/herself.
-            graph.addEdge(node, node, LIKES);
-        }
-
-        @Override
-        public void edgeAdded(Graph<String, String> graph, Edge<String, String> edge) {}
-    }
-
-    public static class SymmetricLikes implements SmartListener<String, String> {
-        @Override
-        public void nodeAdded(Graph<String, String> graph, String node) {}
-
-        @Override
-        public void edgeAdded(Graph<String, String> graph, Edge<String, String> edge) {
-            // If you like someone, that someone likes you too!
-            graph.addEdge(edge.getTargetNode(), edge.getSourceNode(), LIKES);
-        }
-    }
-
-    public static class TransitiveLikes implements SmartListener<String, String> {
-        @Override
-        public void nodeAdded(Graph<String, String> graph, String node) {}
-
-        @Override
-        public void edgeAdded(Graph<String, String> graph, Edge<String, String> edge) {
-            // If you like someone and that someone likes another one, then you like that other one too!
-
-            if (!edge.getType().equals(LIKES))
-                return;
-
-            Set<String> sources = graph.getIncomingNodes(edge.getSourceNode(), LIKES);
-            String s = edge.getSourceNode();
-            String t = edge.getTargetNode();
-            Set<String> targets = graph.getOutgoingNodes(edge.getTargetNode(), LIKES);
-
-            // Everyone who likes you, loves who you like
-            for (String node : sources) {
-                graph.addEdge(node, t, LIKES);
-            }
-
-            // You like everyone the one you like likes
-            for (String node : targets) {
-                graph.addEdge(s, node, LIKES);
-            }
-
-            // Everyone who likes you, likes everyone the one you like likes
-            for (String nodeS : sources) {
-                for (String nodeT : targets) {
-                    graph.addEdge(nodeS, nodeT, LIKES);
-                }
-            }
-
-        }
-    }
 }
